@@ -1,0 +1,33 @@
+version: "3.7"
+services:
+  nabox-harvest:
+    image: ybizeul/nabox-harvest:latest
+    volumes:
+      - "./log:/log"
+      - ".:/conf"
+      - ".:/netapp-harvest"
+    environment:
+      - CARBON_SERVER=graphite
+      # Set Grafana API key here
+      # - GRAFANA_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    ports:
+      - "5000:5000"
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - "/var/lib/grafana"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=Netapp01
+    ports:
+      - "3000:3000"
+    restart: always
+
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    volumes:
+      - "/opt/graphite/storage"
+    ports:
+      - "8081:80"
+    restart: always

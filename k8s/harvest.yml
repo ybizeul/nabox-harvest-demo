@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: harvest
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 50Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: harvest-conf
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 10Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  harvest
+  labels:
+    app:  harvest
+spec:
+  selector:
+    matchLabels:
+      app: harvest
+  template:
+    metadata:
+      labels:
+        app: harvest
+    spec:
+      volumes:
+        - name: harvest
+          persistentVolumeClaim:
+            claimName: harvest
+        - name: harvest-conf
+          persistentVolumeClaim:
+            claimName: harvest-conf
+      containers:
+      - image:  ybizeul/nabox-harvest
+        name:  harvest
+        # env:
+        #   - name: GRAFANA_KEY
+        #     value: eyJrIjoiN1dGeGYxSFg3TnZsVHViRDN0VzBESlVnWVhTWWtMNVAiLCJuIjoiaGFydmVzdCIsImlkIjoxfQ==
+        resources:
+          requests:
+            cpu: "20m"
+            memory: "55M"
+          limits:
+            cpu: "100"
+            memory: "200M"
+        volumeMounts:
+        - mountPath: /netapp-harvest
+          name: harvest
+        - mountPath: /conf
+          name: harvest-conf
+        ports:
+          - name:  http
+            containerPort: 5000
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: harvest
+spec:
+  selector:
+    app: harvest
+  type: ClusterIP
+  ports:
+  - name: http
+    port:  5000
+    targetPort:  5000

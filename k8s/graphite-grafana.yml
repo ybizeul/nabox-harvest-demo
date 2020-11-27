@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: grafana
+spec:
+  selector:
+    matchLabels:
+      app: grafana
+  serviceName: "grafana"
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        env:
+          - name: GF_SECURITY_ADMIN_PASSWORD
+            value: Netapp01
+        ports:
+        - containerPort: 3000
+          name: web
+        volumeMounts:
+        - name: grafana-data
+          mountPath: /var/lib/grafana
+  volumeClaimTemplates:
+  - metadata:
+      name: grafana-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Mi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: graphite
+spec:
+  selector:
+    matchLabels:
+      app: graphite
+  serviceName: "graphite"
+  template:
+    metadata:
+      labels:
+        app: graphite
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: graphite
+        image: graphiteapp/graphite-statsd:latest
+        ports:
+        - containerPort: 80
+          name: web
+        - containerPort: 2003
+          name: carbon
+        volumeMounts:
+        - name: graphite-data
+          mountPath: /opt/graphite/storage
+  volumeClaimTemplates:
+  - metadata:
+      name: graphite-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana
+spec:
+  selector:
+    app: grafana
+  type: ClusterIP
+  ports:
+  - name: http
+    port:  3000
+    targetPort:  3000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: graphite
+spec:
+  selector:
+    app: graphite
+  type: ClusterIP
+  ports:
+  - name: http
+    port:  80
+    targetPort:  80
+  - name: carbon
+    port:  2003
+    targetPort:  2003
