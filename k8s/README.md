@@ -40,7 +40,7 @@ You can now start NetApp Harvest
 
 ```bash
 # Create namespace if necessary
-kubectl -n netapp-harvest apply harvest.yml
+kubectl -n netapp-harvest apply -f harvest.yml
 ```
 
 #### Copy NetApp Harvest
